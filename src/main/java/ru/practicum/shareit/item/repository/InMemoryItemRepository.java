@@ -11,6 +11,7 @@ import ru.practicum.shareit.item.model.Item;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Repository
@@ -30,30 +31,33 @@ public class InMemoryItemRepository implements ItemRepository {
 
     @Override
     public Collection<ItemDto> findByUserId(long id) {
-        return items.values().stream().filter(item -> item.getOwner() == id).map(ItemMapper::toItemDto).collect(Collectors.toList());
+        return items.values().stream()
+                .filter(item -> Objects.equals(item.getOwner(), id))
+                .map(ItemMapper::toItemDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     public ItemDto update(Item item) {
         Item existingItem = items.get(item.getId());
-        if (existingItem == null) {
+        if (Objects.isNull(existingItem)) {
             log.warn("Attempt to update non-existing item with id: {}", item.getId());
             throw new NotFoundException("Item not found.");
         }
 
-        if (item.getName() != null) {
+        if (Objects.nonNull(item.getName())) {
             existingItem.setName(item.getName());
         }
-        if (item.getDescription() != null) {
+        if (Objects.nonNull(item.getDescription())) {
             existingItem.setDescription(item.getDescription());
         }
-        if (item.getAvailable() != null) {
+        if (Objects.nonNull(item.getAvailable())) {
             existingItem.setAvailable(item.getAvailable());
         }
-        if (item.getOwner() != null) {
+        if (Objects.nonNull(item.getOwner())) {
             existingItem.setOwner(item.getOwner());
         }
-        if (item.getRequest() != null) {
+        if (Objects.nonNull(item.getRequest())) {
             existingItem.setRequest(item.getRequest());
         }
 
@@ -63,10 +67,12 @@ public class InMemoryItemRepository implements ItemRepository {
         return ItemMapper.toItemDto(existingItem);
     }
 
-
     @Override
     public Collection<ItemDto> search(String text) {
-        return items.values().stream().filter(item -> item.getName().toLowerCase().contains(text.toLowerCase()) && item.getAvailable()).map(ItemMapper::toItemDto).collect(Collectors.toList());
+        return items.values().stream()
+                .filter(item -> item.getName().toLowerCase().contains(text.toLowerCase()) && Boolean.TRUE.equals(item.getAvailable()))
+                .map(ItemMapper::toItemDto)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -89,7 +95,7 @@ public class InMemoryItemRepository implements ItemRepository {
 
     @Override
     public void validateOwnership(long itemId, long userId) {
-        if (!items.containsKey(itemId) || items.get(itemId).getOwner() != userId) {
+        if (!items.containsKey(itemId) || !Objects.equals(items.get(itemId).getOwner(), userId)) {
             throw new NotFoundException("Item with id " + itemId + " does not belong to user with id " + userId);
         }
     }

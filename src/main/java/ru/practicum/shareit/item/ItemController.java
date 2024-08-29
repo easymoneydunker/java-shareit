@@ -13,10 +13,11 @@ import java.util.Collection;
 @RequestMapping("/items")
 @RequiredArgsConstructor
 public class ItemController {
+    private static final String X_SHARER_USER_ID = "X-Sharer-User-Id"; // Changed to static final
     private final ItemService itemService;
 
     @GetMapping
-    public Collection<ItemDto> getByUserId(@RequestHeader(name = "X-Sharer-User-Id") @Positive long userId) {
+    public Collection<ItemDto> getByUserId(@RequestHeader(name = X_SHARER_USER_ID) @Positive long userId) {
         return itemService.findItemsByUserId(userId);
     }
 
@@ -26,7 +27,7 @@ public class ItemController {
     }
 
     @PostMapping
-    public ItemDto create(@RequestHeader(name = "X-Sharer-User-Id") @Positive long userId, @RequestBody @Valid Item item) {
+    public ItemDto create(@RequestHeader(name = X_SHARER_USER_ID) @Positive long userId, @RequestBody @Valid Item item) {
         return itemService.create(item, userId);
     }
 
@@ -36,7 +37,7 @@ public class ItemController {
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDto update(@RequestHeader(name = "X-Sharer-User-Id") @Positive long userId, @RequestBody Item item, @PathVariable("itemId") @Positive long id) {
+    public ItemDto update(@RequestHeader(name = X_SHARER_USER_ID) @Positive long userId, @RequestBody Item item, @PathVariable("itemId") @Positive long id) {
         return itemService.update(item, id, userId);
     }
 
