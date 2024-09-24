@@ -11,6 +11,7 @@ import ru.practicum.shareit.booking.service.BookingService;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @RestController
@@ -35,10 +36,11 @@ public class BookingController {
     @GetMapping
     public List<BookingOutputDto> getBookingsByBookerId(@RequestHeader(X_SHARER_USER_ID) @Positive long userId, @RequestParam(name = "end", required = false) LocalDateTime end) {
         log.info("Fetching bookings for user ID: {}", userId);
-        if (end == null) {
-            return bookingService.getBookingsByBookerId(userId);
+        if (Objects.nonNull(end)) {
+            return bookingService.getBookingsByBookerId(userId, end);
         }
-        return bookingService.getBookingsByBookerId(userId, end);
+        return bookingService.getBookingsByBookerId(userId);
+
     }
 
     @GetMapping("/items/{itemId}")
