@@ -1,11 +1,15 @@
-package ru.practicum.shareit.item;
+package ru.practicum.shareit.item.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.comment.dto.CommentDto;
+import ru.practicum.shareit.comment.model.Comment;
+import ru.practicum.shareit.comment.service.CommentService;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.service.ItemService;
 
 import java.util.Collection;
 
@@ -13,8 +17,9 @@ import java.util.Collection;
 @RequestMapping("/items")
 @RequiredArgsConstructor
 public class ItemController {
-    private static final String X_SHARER_USER_ID = "X-Sharer-User-Id"; // Changed to static final
+    private static final String X_SHARER_USER_ID = "X-Sharer-User-Id";
     private final ItemService itemService;
+    private final CommentService commentService;
 
     @GetMapping
     public Collection<ItemDto> getByUserId(@RequestHeader(name = X_SHARER_USER_ID) @Positive long userId) {
@@ -45,4 +50,10 @@ public class ItemController {
     public Collection<ItemDto> search(@RequestParam("text") String text) {
         return itemService.search(text);
     }
+
+    @PostMapping("/{itemId}/comment")
+    public CommentDto addComment(@RequestHeader(X_SHARER_USER_ID) @Positive long userId, @PathVariable("itemId") @Positive long itemId, @RequestBody @Valid Comment comment) {
+        return commentService.create(comment, userId, itemId);
+    }
+
 }
