@@ -32,8 +32,8 @@ public class ItemController {
     }
 
     @PostMapping
-    public ItemDto create(@RequestHeader(name = X_SHARER_USER_ID) @Positive long userId, @RequestBody @Valid Item item) {
-        return itemService.create(item, userId);
+    public ItemDto create(@RequestHeader(name = X_SHARER_USER_ID) @Positive long userId, @RequestBody @Valid ItemDto itemDto) {
+        return itemService.create(itemDto, userId);
     }
 
     @DeleteMapping("/{itemId}")

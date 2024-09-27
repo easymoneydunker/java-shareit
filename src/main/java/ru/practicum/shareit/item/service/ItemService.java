@@ -11,11 +11,14 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.ItemRequest;
+import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -25,6 +28,7 @@ import java.util.stream.Collectors;
 public class ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final ItemRequestRepository itemRequestRepository;
     private final CommentService commentService;
     private final BookingService bookingService;
 
@@ -47,13 +51,26 @@ public class ItemService {
         return itemDto;
     }
 
-    public ItemDto create(Item item, long userId) {
-        log.info("Creating new item: {}", item.getName());
+    public ItemDto create(ItemDto itemDto, long userId) {
+        if (Objects.isNull(itemDto.getAvailable())) {
+            throw new IllegalArgumentException("Item availability cannot be null");
+        }
+        log.info("Creating new item: {}", itemDto.getName());
         validateUser(userId);
         Optional<User> owner = userRepository.findById(userId);
+
+        Item item = ItemMapper.toItem(itemDto);
         item.setOwner(owner.orElseThrow(() -> new NotFoundException("User with id " + userId + " does not exist")));
+
+        if (itemDto.getRequestId() != null) {
+            ItemRequest request = itemRequestRepository.findById(itemDto.getRequestId())
+                    .orElseThrow(() -> new NotFoundException("Request with id " + itemDto.getRequestId() + " does not exist"));
+            item.setRequest(request);
+        }
+
         return ItemMapper.toItemDto(itemRepository.save(item));
     }
+
 
     public ItemDto update(Item updatedItem, long id, long userId) {
         validateItemOwnership(id, userId);
