@@ -15,6 +15,7 @@ import ru.practicum.shareit.user.repository.UserRepository;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final UserMapper userMapper = UserMapper.INSTANCE;
 
     public UserDto createUser(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
@@ -22,7 +23,7 @@ public class UserService {
             throw new DuplicationException("A user with this email already exists.");
         }
         log.info("Creating new user: {}", user.getEmail());
-        return UserMapper.toUserDto(userRepository.save(user));
+        return userMapper.toUserDto(userRepository.save(user));
     }
 
     public UserDto updateUser(long id, User user) {
@@ -44,16 +45,17 @@ public class UserService {
         }
 
         log.info("Updating user with id: {}", id);
-        return UserMapper.toUserDto(userRepository.save(existingUser));
+        return userMapper.toUserDto(userRepository.save(existingUser));
     }
-
 
     public UserDto getUserById(long id) {
         log.info("Fetching user with id: {}", id);
-        return userRepository.findById(id).map(UserMapper::toUserDto).orElseThrow(() -> {
-            log.warn("User not found with id: {}", id);
-            return new NotFoundException("User not found.");
-        });
+        return userRepository.findById(id)
+                .map(userMapper::toUserDto)
+                .orElseThrow(() -> {
+                    log.warn("User not found with id: {}", id);
+                    return new NotFoundException("User not found.");
+                });
     }
 
     public void deleteUserById(long id) {

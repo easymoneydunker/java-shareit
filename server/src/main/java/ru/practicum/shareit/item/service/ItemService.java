@@ -31,21 +31,26 @@ public class ItemService {
     private final ItemRequestRepository itemRequestRepository;
     private final CommentService commentService;
     private final BookingService bookingService;
+    private final ItemMapper itemMapper;
 
     public Collection<ItemDto> findItemsByUserId(long userId) {
         validateUser(userId);
         log.info("Getting items for user with id: {}", userId);
-        return itemRepository.findByOwnerId(userId).stream().map(ItemMapper::toItemDto).collect(Collectors.toList());
+        return itemRepository.findByOwnerId(userId).stream()
+                .map(itemMapper::toItemDto)
+                .collect(Collectors.toList());
     }
 
     public ItemDto findById(long id) {
         validateItem(id);
         log.info("Getting item with id: {}", id);
-        ItemDto itemDto = ItemMapper.toItemDto(itemRepository.findById(id).orElseThrow(() -> new NotFoundException("Item with id " + id + " does not exist")));
+        ItemDto itemDto = itemMapper.toItemDto(itemRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Item with id " + id + " does not exist")));
 
         BookingOutputDto lastBooking = bookingService.getLastBookingByItemId(id);
         BookingOutputDto nextBooking = bookingService.getNextBookingByItemId(id);
-
+        itemDto.setLastBooking(lastBooking);
+        itemDto.setNextBooking(nextBooking);
 
         itemDto.setComments(commentService.getCommentsForItem(id));
         return itemDto;
@@ -59,7 +64,7 @@ public class ItemService {
         validateUser(userId);
         Optional<User> owner = userRepository.findById(userId);
 
-        Item item = ItemMapper.toItem(itemDto);
+        Item item = itemMapper.toItem(itemDto);
         item.setOwner(owner.orElseThrow(() -> new NotFoundException("User with id " + userId + " does not exist")));
 
         if (itemDto.getRequestId() != null) {
@@ -68,9 +73,8 @@ public class ItemService {
             item.setRequest(request);
         }
 
-        return ItemMapper.toItemDto(itemRepository.save(item));
+        return itemMapper.toItemDto(itemRepository.save(item));
     }
-
 
     public ItemDto update(Item updatedItem, long id, long userId) {
         validateItemOwnership(id, userId);
@@ -94,7 +98,7 @@ public class ItemService {
             existingItem.setRequest(updatedItem.getRequest());
         }
 
-        return ItemMapper.toItemDto(itemRepository.save(existingItem));
+        return itemMapper.toItemDto(itemRepository.save(existingItem));
     }
 
     public Collection<ItemDto> search(String text) {
@@ -105,7 +109,10 @@ public class ItemService {
         String searchText = text.trim().toLowerCase();
         Collection<Item> items = itemRepository.findByDescriptionOrNameContainingIgnoreCase(searchText);
         log.info("Found {} items with text: '{}'", items.size(), searchText);
-        return items.stream().filter(Item::getAvailable).map(ItemMapper::toItemDto).collect(Collectors.toList());
+        return items.stream()
+                .filter(Item::getAvailable)
+                .map(itemMapper::toItemDto)
+                .collect(Collectors.toList());
     }
 
     public void deleteById(long id) {
@@ -133,4 +140,3 @@ public class ItemService {
         }
     }
 }
-

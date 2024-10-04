@@ -22,14 +22,6 @@ public class ItemDto {
     private BookingOutputDto lastBooking;
     private BookingOutputDto nextBooking;
 
-    public ItemDto(Long id, String name, String description, boolean available, Long request) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.available = available;
-        this.request = request;
-    }
-
     public ItemDto(Long id, String name, String description, boolean available) {
         this.id = id;
         this.name = name;

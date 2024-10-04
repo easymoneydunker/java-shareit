@@ -20,36 +20,35 @@ import java.util.stream.Collectors;
 public class ItemRequestService {
     private final ItemRequestRepository itemRequestRepository;
     private final UserRepository userRepository;
+    private final ItemMapper itemMapper;
+    private final ItemRequestMapper itemRequestMapper;
 
     public ItemRequestDto createRequest(ItemRequestDto itemRequestDto, Long userId) {
         userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
-        ItemRequest itemRequest = ItemRequestMapper.INSTANCE.toItemRequest(itemRequestDto);
+        ItemRequest itemRequest = itemRequestMapper.toItemRequest(itemRequestDto);
         itemRequest.setRequestor(userRepository.getReferenceById(userId));
         itemRequest.setCreated(LocalDateTime.now());
 
         ItemRequest savedRequest = itemRequestRepository.save(itemRequest);
-        return ItemRequestMapper.INSTANCE.toItemRequestDto(savedRequest);
+        return itemRequestMapper.toItemRequestDto(savedRequest);
     }
 
-
     public List<ItemRequestDto> getUserRequests(Long userId) {
-        return itemRequestRepository.findAllByRequestorIdOrderByCreatedDesc(userId).stream().map(ItemRequestMapper.INSTANCE::toItemRequestDto).collect(Collectors.toList());
+        return itemRequestRepository.findAllByRequestorIdOrderByCreatedDesc(userId).stream().map(itemRequestMapper::toItemRequestDto).collect(Collectors.toList());
     }
 
     public List<ItemRequestDto> getAllRequests(Long userId, int from, int size) {
-        return itemRequestRepository.findAllExcludingUser(userId).stream().map(ItemRequestMapper.INSTANCE::toItemRequestDto).collect(Collectors.toList());
+        return itemRequestRepository.findAllExcludingUser(userId).stream().map(itemRequestMapper::toItemRequestDto).collect(Collectors.toList());
     }
 
     public ItemRequestDto getRequestById(Long requestId) {
         ItemRequest request = itemRequestRepository.findById(requestId).orElseThrow(() -> new NotFoundException("Request not found"));
 
-        ItemRequestDto requestDto = ItemRequestMapper.INSTANCE.toItemRequestDto(request);
-        List<ItemDto> items = request.getItems().stream().map(ItemMapper::toItemDto).toList();
+        ItemRequestDto requestDto = itemRequestMapper.toItemRequestDto(request);
+        List<ItemDto> items = request.getItems().stream().map(itemMapper::toItemDto).collect(Collectors.toList());
         requestDto.setItems(items);
 
         return requestDto;
     }
-
-
 }
