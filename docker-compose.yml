@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   gateway:
     build: gateway
@@ -8,7 +10,10 @@ services:
     depends_on:
       - server
     environment:
+      # Use the service name for the server connection
       - SHAREIT_SERVER_URL=http://server:9090
+    networks:
+      - shareit-network
 
   server:
     build: server
@@ -22,6 +27,8 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/shareit
       - SPRING_DATASOURCE_USERNAME=shareit
       - SPRING_DATASOURCE_PASSWORD=shareit
+    networks:
+      - shareit-network
 
   db:
     image: postgres:16.1
@@ -37,3 +44,9 @@ services:
       timeout: 5s
       interval: 5s
       retries: 10
+    networks:
+      - shareit-network
+
+networks:
+  shareit-network:
+    driver: bridge

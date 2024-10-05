@@ -1,4 +1,4 @@
-package ru.practicum.shareit.user;
+package ru.practicum.shareit.user.client;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +25,7 @@ public class UserClient extends BaseClient {
     }
 
     public ResponseEntity<Object> createUser(UserDto userDto) {
-        return post("", userDto.getId(), userDto);
+        return post("", null, userDto);
     }
 
     public ResponseEntity<Object> updateUser(long userId, UserDto userDto) {

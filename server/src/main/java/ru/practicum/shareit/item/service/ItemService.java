@@ -3,7 +3,7 @@ package ru.practicum.shareit.item.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.booking.dto.BookingOutputDto;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.comment.service.CommentService;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -36,26 +36,23 @@ public class ItemService {
     public Collection<ItemDto> findItemsByUserId(long userId) {
         validateUser(userId);
         log.info("Getting items for user with id: {}", userId);
-        return itemRepository.findByOwnerId(userId).stream()
-                .map(itemMapper::toItemDto)
-                .collect(Collectors.toList());
+        return itemRepository.findByOwnerId(userId).stream().map(itemMapper::toItemDto).collect(Collectors.toList());
     }
 
     public ItemDto findById(long id) {
         validateItem(id);
         log.info("Getting item with id: {}", id);
-        ItemDto itemDto = itemMapper.toItemDto(itemRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Item with id " + id + " does not exist")));
+        Item item = itemRepository.findById(id).orElseThrow(() -> new NotFoundException("Item with id " + id + " does not exist"));
 
-        BookingOutputDto lastBooking = bookingService.getLastBookingByItemId(id);
-        BookingOutputDto nextBooking = bookingService.getNextBookingByItemId(id);
-        itemDto.setLastBooking(lastBooking);
-        itemDto.setNextBooking(nextBooking);
-
+        ItemDto itemDto = itemMapper.toItemDto(item);
+        itemDto.setLastBooking(bookingService.getLastBookingByItemId(id));
+        itemDto.setNextBooking(bookingService.getNextBookingByItemId(id));
         itemDto.setComments(commentService.getCommentsForItem(id));
+
         return itemDto;
     }
 
+    @Transactional
     public ItemDto create(ItemDto itemDto, long userId) {
         if (Objects.isNull(itemDto.getAvailable())) {
             throw new IllegalArgumentException("Item availability cannot be null");
@@ -76,14 +73,13 @@ public class ItemService {
         return itemMapper.toItemDto(itemRepository.save(item));
     }
 
+
+    @Transactional
     public ItemDto update(Item updatedItem, long id, long userId) {
         validateItemOwnership(id, userId);
         log.info("Updating item with id: {}", id);
 
-        Item existingItem = itemRepository.findById(id).orElseThrow(() -> {
-            log.warn("Item with id {} not found", id);
-            return new NotFoundException("Item not found");
-        });
+        Item existingItem = itemRepository.findById(id).orElseThrow(() -> new NotFoundException("Item with id " + id + " does not exist"));
 
         if (updatedItem.getName() != null) {
             existingItem.setName(updatedItem.getName());
@@ -106,13 +102,12 @@ public class ItemService {
         if (text == null || text.trim().isEmpty()) {
             return new ArrayList<>();
         }
+
         String searchText = text.trim().toLowerCase();
         Collection<Item> items = itemRepository.findByDescriptionOrNameContainingIgnoreCase(searchText);
         log.info("Found {} items with text: '{}'", items.size(), searchText);
-        return items.stream()
-                .filter(Item::getAvailable)
-                .map(itemMapper::toItemDto)
-                .collect(Collectors.toList());
+
+        return items.stream().filter(Item::getAvailable).map(itemMapper::toItemDto).collect(Collectors.toList());
     }
 
     public void deleteById(long id) {
@@ -121,21 +116,24 @@ public class ItemService {
         itemRepository.deleteById(id);
     }
 
-    public void validateUser(long userId) {
+    private void validateUser(long userId) {
         if (!userRepository.existsById(userId)) {
+            log.warn("User with id {} does not exist", userId);
             throw new NotFoundException("User with id " + userId + " does not exist");
         }
     }
 
-    public void validateItem(long itemId) {
+    private void validateItem(long itemId) {
         if (!itemRepository.existsById(itemId)) {
+            log.warn("Item with id {} does not exist", itemId);
             throw new NotFoundException("Item with id " + itemId + " does not exist");
         }
     }
 
-    public void validateItemOwnership(long itemId, long userId) {
+    private void validateItemOwnership(long itemId, long userId) {
         validateItem(itemId);
         if (!itemRepository.existsByIdAndOwnerId(itemId, userId)) {
+            log.warn("Item with id {} does not belong to user with id {}", itemId, userId);
             throw new NotFoundException("Item with id " + itemId + " does not belong to user with id " + userId);
         }
     }

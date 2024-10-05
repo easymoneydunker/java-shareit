@@ -7,7 +7,7 @@ import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.dto.BookingOutputDto;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.model.BookingStatus;
+import ru.practicum.shareit.booking.model.BookingState;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.model.Item;
@@ -39,7 +39,7 @@ public class BookingService {
         Booking booking = bookingMapper.toEntity(bookingDto);
         booking.setBooker(user);
         booking.setItem(item);
-        booking.setStatus(BookingStatus.WAITING);
+        booking.setStatus(BookingState.WAITING);
 
         return bookingMapper.toBookingOutputDto(bookingRepository.save(booking));
     }
@@ -70,7 +70,7 @@ public class BookingService {
             throw new IllegalArgumentException("User is not the owner of the item");
         }
 
-        booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
+        booking.setStatus(approved ? BookingState.APPROVED : BookingState.REJECTED);
         return bookingMapper.toBookingOutputDto(bookingRepository.save(booking));
     }
 

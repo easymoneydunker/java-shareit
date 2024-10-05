@@ -7,6 +7,7 @@ import lombok.Data;
 import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 
+
 @Entity
 @Data
 @Table(name = "items")
@@ -28,7 +29,7 @@ public class Item {
     @JoinColumn(name = "owner_id")
     private User owner;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "request_id")
     private ItemRequest request;
 }
