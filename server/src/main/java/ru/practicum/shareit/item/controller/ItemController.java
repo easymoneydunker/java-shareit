@@ -55,5 +55,4 @@ public class ItemController {
     public CommentDto addComment(@RequestHeader(X_SHARER_USER_ID) @Positive long userId, @PathVariable("itemId") @Positive long itemId, @RequestBody @Valid Comment comment) {
         return commentService.create(comment, userId, itemId);
     }
-
 }

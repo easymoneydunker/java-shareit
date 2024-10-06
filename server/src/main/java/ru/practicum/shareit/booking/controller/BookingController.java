@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingOutputDto;
 import ru.practicum.shareit.booking.service.BookingService;
+import ru.practicum.shareit.exception.NotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,6 +34,12 @@ public class BookingController {
         return bookingService.getBookingById(id);
     }
 
+    @GetMapping("/owner")
+    public List<BookingOutputDto> getBookingByOwner(@RequestHeader(X_SHARER_USER_ID) @Positive long userId) {
+        log.info("Fetching bookings for owner ID: {}", userId);
+        throw new NotFoundException("Not implemented");
+    }
+
     @GetMapping
     public List<BookingOutputDto> getBookingsByBookerId(@RequestHeader(X_SHARER_USER_ID) @Positive long userId, @RequestParam(name = "end", required = false) LocalDateTime end) {
         log.info("Fetching bookings for user ID: {}", userId);
@@ -40,7 +47,6 @@ public class BookingController {
             return bookingService.getBookingsByBookerId(userId, end);
         }
         return bookingService.getBookingsByBookerId(userId);
-
     }
 
     @GetMapping("/items/{itemId}")

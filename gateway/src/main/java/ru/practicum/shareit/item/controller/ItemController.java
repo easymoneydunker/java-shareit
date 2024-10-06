@@ -16,7 +16,7 @@ import ru.practicum.shareit.item.dto.ItemDto;
 public class ItemController {
     private static final String X_SHARER_USER_ID = "X-Sharer-User-Id";
     private final ItemClient itemClient;
-    private final CommentClient  commentClient;
+    private final CommentClient commentClient;
 
     @GetMapping
     public ResponseEntity<Object> getByUserId(@RequestHeader(name = X_SHARER_USER_ID) @Positive long userId) {
@@ -53,5 +53,3 @@ public class ItemController {
         return commentClient.addComment(userId, itemId, commentDto);
     }
 }
-
-

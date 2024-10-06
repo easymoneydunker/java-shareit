@@ -36,7 +36,7 @@ public class BookingClient extends BaseClient {
     }
 
     public ResponseEntity<Object> approveBooking(Long bookingId, long userId, boolean approved) {
-        Map<String, Object> parameters = Map.of("approved", approved);
-        return patch("/" + bookingId + "?approved={approved}", userId, parameters);
+        String url = "/" + bookingId + "?approved=" + approved;
+        return patch(url, userId, null);
     }
 }

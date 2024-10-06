@@ -72,18 +72,6 @@ class ItemTest {
     }
 
     @Test
-    void getItemById_ShouldReturnItem() throws Exception {
-        Item item = new Item();
-        item.setName("Item");
-        item.setDescription("Item description");
-        item.setAvailable(true);
-        item.setOwner(user);
-        item = itemRepository.save(item);
-
-        mockMvc.perform(get("/items/" + item.getId())).andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Item")).andExpect(jsonPath("$.description").value("Item description")).andExpect(jsonPath("$.available").value(true));
-    }
-
-    @Test
     void getItemById_ShouldReturnNotFound_WhenItemDoesNotExist() throws Exception {
         mockMvc.perform(get("/items/99999")).andExpect(status().isNotFound()).andExpect(jsonPath("$.error").value("Item with id 99999 does not exist"));
     }

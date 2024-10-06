@@ -43,10 +43,9 @@ public class ItemService {
         validateItem(id);
         log.info("Getting item with id: {}", id);
         Item item = itemRepository.findById(id).orElseThrow(() -> new NotFoundException("Item with id " + id + " does not exist"));
-
         ItemDto itemDto = itemMapper.toItemDto(item);
         itemDto.setLastBooking(bookingService.getLastBookingByItemId(id));
-        itemDto.setNextBooking(bookingService.getNextBookingByItemId(id));
+
         itemDto.setComments(commentService.getCommentsForItem(id));
 
         return itemDto;
@@ -65,8 +64,7 @@ public class ItemService {
         item.setOwner(owner.orElseThrow(() -> new NotFoundException("User with id " + userId + " does not exist")));
 
         if (itemDto.getRequestId() != null) {
-            ItemRequest request = itemRequestRepository.findById(itemDto.getRequestId())
-                    .orElseThrow(() -> new NotFoundException("Request with id " + itemDto.getRequestId() + " does not exist"));
+            ItemRequest request = itemRequestRepository.findById(itemDto.getRequestId()).orElseThrow(() -> new NotFoundException("Request with id " + itemDto.getRequestId() + " does not exist"));
             item.setRequest(request);
         }
 
