@@ -83,6 +83,25 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.2.0</version> <!-- Specify the latest version -->
+                <configuration>
+                    <configLocation>checkstyle.xml</configLocation> <!-- Your Checkstyle config file -->
+                    <encoding>UTF-8</encoding>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>true</failsOnError> <!-- Fail build on violations -->
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>validate</phase> <!-- Run Checkstyle during the 'validate' phase -->
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>

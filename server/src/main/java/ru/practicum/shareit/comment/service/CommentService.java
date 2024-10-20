@@ -3,6 +3,7 @@ package ru.practicum.shareit.comment.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingOutputDto;
 import ru.practicum.shareit.booking.model.BookingState;
 import ru.practicum.shareit.booking.service.BookingService;
@@ -18,6 +19,7 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -29,6 +31,7 @@ public class CommentService {
     private final BookingService bookingService;
     private final CommentRepository commentRepository;
 
+    @Transactional
     public CommentDto create(Comment comment, long userId, long itemId) {
         log.info("Attempting to create comment for item id: {} by user id: {}", itemId, userId);
 
@@ -44,12 +47,16 @@ public class CommentService {
 
         List<BookingOutputDto> bookings = bookingService.getBookingByItemIdAndUserId(itemId, userId);
 
-        boolean hasApprovedBooking = bookings.stream()
-                .anyMatch(booking -> booking.getStatus() == BookingState.APPROVED);
+        if (bookings.isEmpty()) {
+            log.warn("User with id {} attempted to comment on item {} without any bookings", userId, itemId);
+            throw new IllegalArgumentException("User cannot comment because they don't have any bookings for this item.");
+        }
 
-        if (!hasApprovedBooking) {
-            log.warn("User with id {} attempted to comment on item {} without an approved booking", userId, itemId);
-            throw new IllegalArgumentException("This user cannot add a comment because they haven't completed an approved booking for this item.");
+        BookingOutputDto approvedAndCompletedBooking = bookings.stream().filter(booking -> booking.getStatus() == BookingState.APPROVED && (booking.getEnd().isBefore(LocalDateTime.now().plusHours(3)))).findAny().orElse(null);
+
+        if (Objects.isNull(approvedAndCompletedBooking)) {
+            log.warn("User with id {} attempted to comment on item {} without a completed approved booking", userId, itemId);
+            throw new IllegalArgumentException("This booking ends after " + LocalDateTime.now().plusHours(3) + " so you can't comment");
         }
 
         comment.setItem(item);
@@ -59,6 +66,7 @@ public class CommentService {
         log.info("Saving comment for item id: {} by user id: {}", itemId, userId);
         return new CommentToDtoMapper().apply(commentRepository.save(comment));
     }
+
     public CommentDto getCommentById(long commentId) {
         log.info("Fetching comment with id: {}", commentId);
         return new CommentToDtoMapper().apply(commentRepository.findById(commentId).orElseThrow(() -> {
