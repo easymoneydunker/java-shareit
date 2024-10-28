@@ -33,22 +33,33 @@ public class ItemService {
     private final BookingService bookingService;
     private final ItemMapper itemMapper;
 
+    @Transactional
     public Collection<ItemDto> findItemsByUserId(long userId) {
         validateUser(userId);
         log.info("Getting items for user with id: {}", userId);
         return itemRepository.findByOwnerId(userId).stream().map(itemMapper::toItemDto).collect(Collectors.toList());
     }
 
-    public ItemDto findById(long id) {
+    @Transactional
+    public ItemDto findById(long id, long userId) {
         validateItem(id);
         log.info("Getting item with id: {}", id);
         Item item = itemRepository.findById(id).orElseThrow(() -> new NotFoundException("Item with id " + id + " does not exist"));
         ItemDto itemDto = itemMapper.toItemDto(item);
-        itemDto.setLastBooking(bookingService.getLastBookingByItemId(id));
+
+        if (item.getOwner().getId() == userId) {
+            itemDto.setLastBooking(bookingService.getLastBookingByItemId(id));
+            itemDto.setNextBooking(bookingService.getNextBookingByItemId(id));
+        }
 
         itemDto.setComments(commentService.getCommentsForItem(id));
 
         return itemDto;
+    }
+
+    @Transactional
+    public Collection<ItemDto> findAll() {
+        return itemRepository.findAll().stream().map(itemMapper::toItemDto).collect(Collectors.toList());
     }
 
     @Transactional
@@ -108,6 +119,7 @@ public class ItemService {
         return items.stream().filter(Item::getAvailable).map(itemMapper::toItemDto).collect(Collectors.toList());
     }
 
+    @Transactional
     public void deleteById(long id) {
         validateItem(id);
         log.info("Deleting item with id: {}", id);
@@ -121,7 +133,7 @@ public class ItemService {
         }
     }
 
-    private void validateItem(long itemId) {
+    public void validateItem(long itemId) {
         if (!itemRepository.existsById(itemId)) {
             log.warn("Item with id {} does not exist", itemId);
             throw new NotFoundException("Item with id " + itemId + " does not exist");

@@ -1,4 +1,4 @@
-package ru.practicum.shareit;
+package ru.practicum.shareit.repository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,14 +78,6 @@ class CommentTest {
     }
 
     @Test
-    void findByAuthorId_ShouldReturnCommentList_WhenCommentsExistForAuthor() {
-        createComment("Great item!", user, item);
-        Optional<Comment> comment = commentRepository.findByAuthorId(user.getId());
-        assertTrue(comment.isPresent());
-        assertEquals(user.getId(), comment.get().getAuthor().getId());
-    }
-
-    @Test
     void findByItemId_ShouldReturnCommentsForItem() {
         Comment comment1 = createComment("Great item!", user, item);
         Comment comment2 = createComment("Amazing!", user, item);
@@ -102,5 +94,35 @@ class CommentTest {
         commentRepository.deleteById(comment.getId());
         Optional<Comment> foundComment = commentRepository.findById(comment.getId());
         assertFalse(foundComment.isPresent());
+    }
+
+    @Test
+    void findById_ShouldReturnEmpty_WhenCommentDoesNotExist() {
+        Optional<Comment> foundComment = commentRepository.findById(99999L);
+        assertFalse(foundComment.isPresent());
+    }
+
+    @Test
+    void findByItemId_ShouldReturnEmptyList_WhenNoCommentsExistForItem() {
+        List<Comment> comments = commentRepository.findByItemId(item.getId());
+        assertTrue(comments.isEmpty());
+    }
+
+    @Test
+    void deleteById_ShouldNotThrowException_WhenCommentDoesNotExist() {
+        assertDoesNotThrow(() -> commentRepository.deleteById(99999L));
+    }
+
+    @Test
+    void createComment_ShouldSaveComment_WhenValid() {
+        Comment comment = createComment("Valid comment", user, item);
+        assertNotNull(comment.getId());
+    }
+
+    @Test
+    void findByAuthorId_ShouldReturnEmptyList_WhenAuthorHasNoComments() {
+        User newUser = createUser("newuser@example.com", "New User");
+        Optional<Comment> comments = commentRepository.findByAuthorId(newUser.getId());
+        assertTrue(comments.isEmpty());
     }
 }

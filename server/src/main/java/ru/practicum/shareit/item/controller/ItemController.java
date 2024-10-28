@@ -17,7 +17,7 @@ import java.util.Collection;
 @RequestMapping("/items")
 @RequiredArgsConstructor
 public class ItemController {
-    private static final String X_SHARER_USER_ID = "X-Sharer-User-Id";
+    public static final String X_SHARER_USER_ID = "X-Sharer-User-Id";
     private final ItemService itemService;
     private final CommentService commentService;
 
@@ -27,8 +27,8 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getById(@PathVariable("itemId") @Positive long id) {
-        return itemService.findById(id);
+    public ItemDto getById(@PathVariable("itemId") @Positive long id, @RequestHeader(name = X_SHARER_USER_ID) @Positive long userId) {
+        return itemService.findById(id, userId);
     }
 
     @PostMapping
@@ -54,5 +54,10 @@ public class ItemController {
     @PostMapping("/{itemId}/comment")
     public CommentDto addComment(@RequestHeader(X_SHARER_USER_ID) @Positive long userId, @PathVariable("itemId") @Positive long itemId, @RequestBody @Valid Comment comment) {
         return commentService.create(comment, userId, itemId);
+    }
+
+    @GetMapping("/all")
+    public Collection<ItemDto> getAllItems() {
+        return itemService.findAll();
     }
 }

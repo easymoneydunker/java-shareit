@@ -3,6 +3,7 @@ package ru.practicum.shareit.user.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.DuplicationException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -17,6 +18,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper = UserMapper.INSTANCE;
 
+    @Transactional
     public UserDto createUser(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
             log.warn("Attempt to create user with existing email: {}", user.getEmail());
@@ -26,6 +28,7 @@ public class UserService {
         return userMapper.toUserDto(userRepository.save(user));
     }
 
+    @Transactional
     public UserDto updateUser(long id, User user) {
         User existingUser = userRepository.findById(id).orElseThrow(() -> {
             log.warn("Attempt to update non-existing user with id: {}", id);
@@ -50,12 +53,10 @@ public class UserService {
 
     public UserDto getUserById(long id) {
         log.info("Fetching user with id: {}", id);
-        return userRepository.findById(id)
-                .map(userMapper::toUserDto)
-                .orElseThrow(() -> {
-                    log.warn("User not found with id: {}", id);
-                    return new NotFoundException("User not found.");
-                });
+        return userRepository.findById(id).map(userMapper::toUserDto).orElseThrow(() -> {
+            log.warn("User not found with id: {}", id);
+            return new NotFoundException("User not found.");
+        });
     }
 
     public void deleteUserById(long id) {

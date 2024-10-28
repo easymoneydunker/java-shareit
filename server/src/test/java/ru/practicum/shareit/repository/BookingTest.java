@@ -1,4 +1,4 @@
-package ru.practicum.shareit;
+package ru.practicum.shareit.repository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -121,5 +122,36 @@ class BookingTest {
         assertEquals(1, nextBookings.size());
         assertEquals(nextBooking.getId(), nextBookings.get(0).getId());
     }
-}
 
+    @Test
+    void findByBookerIdAndEndIsBefore_ShouldReturnEmpty_WhenNoBookingsExist() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Booking> bookings = bookingRepository.findByBookerIdAndEndIsBefore(booker.getId(), now, Sort.by("start").descending());
+        assertTrue(bookings.isEmpty());
+    }
+
+    @Test
+    void findNextBookingByItemId_ShouldReturnEmpty_WhenNoNextBookingExists() {
+        LocalDateTime now = LocalDateTime.now();
+        createBooking(booker, item, now.minusDays(2), now.minusDays(1));
+
+        List<Booking> nextBookings = bookingRepository.findNextBookingByItemId(item.getId(), now);
+        assertTrue(nextBookings.isEmpty());
+    }
+
+    @Test
+    void findLastBookingByItemId_ShouldReturnEmpty_WhenNoLastBookingExists() {
+        LocalDateTime now = LocalDateTime.now();
+        createBooking(booker, item, now.plusDays(1), now.plusDays(2));
+
+        List<Booking> lastBookings = bookingRepository.findLastBookingByItemId(item.getId(), now);
+        assertTrue(lastBookings.isEmpty());
+    }
+
+    @Test
+    void findByBookerId_ShouldReturnEmpty_WhenNoBookingsExistForBooker() {
+        User newBooker = createUser("newbooker@example.com", "New Booker");
+        List<Booking> bookings = bookingRepository.findByBookerId(newBooker.getId());
+        assertTrue(bookings.isEmpty());
+    }
+}

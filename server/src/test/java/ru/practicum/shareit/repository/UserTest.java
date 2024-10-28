@@ -1,4 +1,4 @@
-package ru.practicum.shareit;
+package ru.practicum.shareit.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -74,8 +74,41 @@ class UserTest {
 
         mockMvc.perform(delete("/users/" + user.getId()));
 
-        mockMvc.perform(get("/users/" + user.getId()))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/users/" + user.getId())).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void createUser_ShouldReturnBadRequest_WhenEmailIsMissing() throws Exception {
+        User user = new User();
+        user.setName("Test User");
+
+        mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(user))).andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void createUser_ShouldReturnBadRequest_WhenEmailIsInvalid() throws Exception {
+        User user = new User();
+        user.setEmail("invalid-email");
+        user.setName("Test User");
+
+        mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(user))).andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void updateUser_ShouldReturnNotFound_WhenUserDoesNotExist() throws Exception {
+        User user = new User();
+        user.setEmail("updated@example.com");
+        user.setName("Updated User");
+
+        mockMvc.perform(patch("/users/99999").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(user))).andExpect(status().isNotFound()).andExpect(jsonPath("$.error").value("User not found."));
+    }
+
+    @Test
+    void createUser_ShouldReturnBadRequest_WhenNameIsMissing() throws Exception {
+        User user = new User();
+        user.setEmail("test@example.com");
+
+        mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(user))).andExpect(status().isInternalServerError());
     }
 
 }

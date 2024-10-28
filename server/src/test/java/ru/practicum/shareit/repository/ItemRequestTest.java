@@ -1,4 +1,4 @@
-package ru.practicum.shareit;
+package ru.practicum.shareit.repository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -73,5 +73,52 @@ class ItemRequestTest {
         assertThat(requests.get(0).getDescription()).isEqualTo("Request 3");
         assertThat(requests.get(0).getRequestor().getId()).isEqualTo(user2.getId());
     }
-}
 
+    @Test
+    void findAllByRequestorIdOrderByCreatedDesc_ShouldReturnEmptyList_WhenNoRequestsExist() {
+        userRepository.deleteAll(); // Clear all users to create no requests
+        List<ItemRequest> requests = itemRequestRepository.findAllByRequestorIdOrderByCreatedDesc(user1.getId());
+
+        assertThat(requests).isEmpty();
+    }
+
+    @Test
+    void findAllExcludingUser_ShouldReturnEmptyList_WhenAllRequestsAreFromUser() {
+        itemRequestRepository.deleteAll(); // Clear all requests
+        createItemRequest("Request 1", user1, LocalDateTime.now());
+        List<ItemRequest> requests = itemRequestRepository.findAllExcludingUser(user1.getId());
+
+        assertThat(requests).isEmpty();
+    }
+
+    @Test
+    void createItemRequest_ShouldPersistNewRequest() {
+        ItemRequest newRequest = new ItemRequest();
+        newRequest.setDescription("New Request");
+        newRequest.setRequestor(user1);
+        newRequest.setCreated(LocalDateTime.now());
+
+        ItemRequest savedRequest = itemRequestRepository.save(newRequest);
+
+        assertThat(savedRequest).isNotNull();
+        assertThat(savedRequest.getId()).isNotNull();
+        assertThat(savedRequest.getDescription()).isEqualTo("New Request");
+        assertThat(savedRequest.getRequestor().getId()).isEqualTo(user1.getId());
+    }
+
+    @Test
+    void findById_ShouldReturnItemRequest_WhenRequestExists() {
+        ItemRequest existingRequest = itemRequestRepository.findAllByRequestorIdOrderByCreatedDesc(user1.getId()).get(0);
+        ItemRequest foundRequest = itemRequestRepository.findById(existingRequest.getId()).orElse(null);
+
+        assertThat(foundRequest).isNotNull();
+        assertThat(foundRequest.getId()).isEqualTo(existingRequest.getId());
+        assertThat(foundRequest.getDescription()).isEqualTo(existingRequest.getDescription());
+    }
+
+    @Test
+    void findById_ShouldReturnNull_WhenRequestDoesNotExist() {
+        ItemRequest foundRequest = itemRequestRepository.findById(99999L).orElse(null);
+        assertThat(foundRequest).isNull();
+    }
+}

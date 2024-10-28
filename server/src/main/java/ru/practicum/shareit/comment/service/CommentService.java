@@ -34,6 +34,9 @@ public class CommentService {
     @Transactional
     public CommentDto create(Comment comment, long userId, long itemId) {
         log.info("Attempting to create comment for item id: {} by user id: {}", itemId, userId);
+        if (comment == null) {
+            throw new IllegalArgumentException("Comment cannot be null");
+        }
 
         User user = userRepository.findById(userId).orElseThrow(() -> {
             log.warn("User with id {} not found", userId);
@@ -52,11 +55,11 @@ public class CommentService {
             throw new IllegalArgumentException("User cannot comment because they don't have any bookings for this item.");
         }
 
-        BookingOutputDto approvedAndCompletedBooking = bookings.stream().filter(booking -> booking.getStatus() == BookingState.APPROVED && (booking.getEnd().isBefore(LocalDateTime.now().plusHours(3)))).findAny().orElse(null);
+        BookingOutputDto approvedAndCompletedBooking = bookings.stream().filter(booking -> booking.getStatus() == BookingState.APPROVED && (booking.getEnd().isBefore(LocalDateTime.now()))).findAny().orElse(null);
 
         if (Objects.isNull(approvedAndCompletedBooking)) {
             log.warn("User with id {} attempted to comment on item {} without a completed approved booking", userId, itemId);
-            throw new IllegalArgumentException("This booking ends after " + LocalDateTime.now().plusHours(3) + " so you can't comment");
+            throw new IllegalArgumentException("This booking ends after " + LocalDateTime.now() + " so you can't comment");
         }
 
         comment.setItem(item);
@@ -67,6 +70,7 @@ public class CommentService {
         return new CommentToDtoMapper().apply(commentRepository.save(comment));
     }
 
+    @Transactional
     public CommentDto getCommentById(long commentId) {
         log.info("Fetching comment with id: {}", commentId);
         return new CommentToDtoMapper().apply(commentRepository.findById(commentId).orElseThrow(() -> {
@@ -75,6 +79,7 @@ public class CommentService {
         }));
     }
 
+    @Transactional
     public List<CommentDto> getCommentsForItem(long itemId) {
         log.info("Fetching comments for item id: {}", itemId);
         itemRepository.findById(itemId).orElseThrow(() -> {

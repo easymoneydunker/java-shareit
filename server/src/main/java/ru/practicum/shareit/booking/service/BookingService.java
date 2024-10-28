@@ -3,6 +3,7 @@ package ru.practicum.shareit.booking.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.dto.BookingOutputDto;
@@ -27,6 +28,7 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final ItemRepository itemRepository;
 
+    @Transactional
     public BookingOutputDto create(BookingDto bookingDto, long bookerId) {
         User booker = userRepository.findById(bookerId).orElseThrow(() -> new NotFoundException("User not found"));
 
@@ -64,6 +66,7 @@ public class BookingService {
         return bookingRepository.findByItemId(itemId).stream().map(bookingMapper::toBookingOutputDto).collect(Collectors.toList());
     }
 
+    @Transactional
     public BookingOutputDto approveBooking(long bookingId, long userId, boolean approved) {
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new NotFoundException("Booking not found"));
 
